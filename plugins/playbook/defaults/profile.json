@@ -1,0 +1,77 @@
+{
+  "playbook": 1,
+  "stack": {
+    "pack": "undecided",
+    "setup": "",
+    "notes": ""
+  },
+  "verify": {},
+  "gate": [
+    "test",
+    "lint",
+    "typecheck"
+  ],
+  "docs": {
+    "depth": "full",
+    "spec": "SPEC.md",
+    "specDir": "docs/spec/",
+    "roadmap": "ROADMAP.md",
+    "log": "docs/log.md",
+    "archive": "docs/archive/",
+    "logEntryLines": 5
+  },
+  "design": {
+    "tool": "claude-design",
+    "handoffs": "design/handoffs/"
+  },
+  "tasks": {
+    "approvePlan": true,
+    "goalTurns": 30
+  },
+  "tdd": {
+    "mode": "strict-stub",
+    "exempt": [
+      "scaffold",
+      "spike",
+      "fixture"
+    ]
+  },
+  "review": {
+    "lenses": 3
+  },
+  "security": {
+    "sensitive": [],
+    "landmines": []
+  },
+  "git": {
+    "merge": "agent-confirm",
+    "protection": "pre-push"
+  },
+  "deps": {
+    "automerge": "dev-patch",
+    "cooldownDays": 3
+  },
+  "autopilot": {
+    "mode": "off",
+    "caps": {
+      "perDay": 4,
+      "unmerged": 3,
+      "security": 1
+    },
+    "permissionMode": "auto",
+    "workerTimeoutHours": 4,
+    "copyIntoWorktree": [
+      ".env.local"
+    ],
+    "notify": "push",
+    "patterns": {},
+    "tripwires": [],
+    "testFile": "",
+    "testCall": "",
+    "alwaysInPlan": [
+      "ROADMAP.md",
+      "docs/log.md"
+    ],
+    "keepAwake": ""
+  }
+}

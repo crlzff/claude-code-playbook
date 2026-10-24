@@ -1,0 +1,9 @@
+{
+  "name": "playbook",
+  "displayName": "Playbook",
+  "description": "Task routine (/task, /ship, /done, /milestone-review), read-only reviewer, opt-in autopilot, token guard, and boot/doctor driven by .claude/profile.json.",
+  "author": {
+    "name": "playbook maintainers"
+  },
+  "license": "MIT"
+}

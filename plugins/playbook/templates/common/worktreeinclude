@@ -1,0 +1,7 @@
+# Gitignored files copied into each worktree Claude Code creates
+# (--worktree, subagent and desktop worktrees). Uses .gitignore syntax;
+# only files that are also gitignored are copied. Worktrees made by hand
+# with `git worktree add` do NOT get these: copy them yourself. The
+# autopilot copies the profile's autopilot.copyIntoWorktree list.
+.env
+.env.local

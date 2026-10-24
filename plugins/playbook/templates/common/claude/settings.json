@@ -1,0 +1,10 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "remoteControlAtStartup": false,
+  "enabledPlugins": {
+    "playbook@playbook": true
+  }
+}

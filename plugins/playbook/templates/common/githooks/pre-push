@@ -1,0 +1,30 @@
+#!/bin/sh
+# Refuse to push straight to the main branch: changes reach it as a
+# squash-merged PR (/ship, then /done). Server-side protection is the real
+# guarantee, but rulesets need a paid plan on a private repository, so this
+# local guard stands in (profile git.protection: pre-push).
+#
+# One exception: creating the main branch on a remote that doesn't have it
+# yet (the project's first push), so a new repository can start.
+#
+# Honest about its limits: `--no-verify` bypasses it, it exists only where
+# core.hooksPath points at .githooks, and cloud sessions don't run it. It
+# turns "push whatever you like" into "you have to mean it", nothing more.
+main=main
+zero=0000000000000000000000000000000000000000
+while read -r _local_ref local_sha remote_ref remote_sha; do
+	case "$remote_ref" in
+	refs/heads/"$main")
+		if [ "$remote_sha" = "$zero" ] && [ "$local_sha" != "$zero" ]; then
+			echo "pre-push: creating $main on the remote (first push): allowed once." >&2
+			continue
+		fi
+		echo "pre-push: refusing to push directly to $main." >&2
+		echo "  Changes reach $main as a squash-merged PR: /ship, then /done." >&2
+		echo "  Override with --no-verify, if you mean it." >&2
+		exit 1
+		;;
+	esac
+done
+
+exit 0

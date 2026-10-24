@@ -1,0 +1,11 @@
+# Secrets and machine state: only .env.example is ever committed.
+.env*
+!.env.example
+.DS_Store
+# Claude Code worktrees, the autopilot's worker tree, plans and logs.
+.claude/worktrees/
+.claude/settings.local.json
+# Research on other products stays local: only our own notes, in our own
+# words, are committed. The key to the neutral labels is research/sources.md.
+research/*
+!research/notes.md

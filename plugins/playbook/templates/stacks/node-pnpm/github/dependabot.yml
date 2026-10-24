@@ -1,0 +1,59 @@
+# Dependency updates: Dependabot, not a third-party app, because it runs
+# inside GitHub, which already holds the code, so no other party gets access
+# to the repository.
+#
+# Version updates arrive weekly, one grouped PR per ecosystem, and wait
+# __COOLDOWN__ days after a release before being proposed. Security updates are
+# separate: switch on "Dependabot security updates" in the repository
+# settings; they ignore the schedule and the cooldown.
+#
+# Only the `dev-patch` group may be merged without a person, by
+# `.github/workflows/dependabot-automerge.yml` once CI is green (profile
+# deps.automerge). Everything else is merged by hand, like any other PR.
+version: 2
+
+updates:
+  - package-ecosystem: npm # pnpm is detected from pnpm-lock.yaml
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Etc/UTC
+    cooldown:
+      default-days: __COOLDOWN__
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+    groups:
+      # The automerge workflow matches this group's name in the branch and PR
+      # title (`dependabot/npm_and_yarn/dev-patch-…`); rename both together.
+      # A runtime dependency that a tool also lists under devDependencies
+      # goes under exclude-patterns, so it never merges unattended.
+      dev-patch:
+        dependency-type: development
+        update-types: [patch]
+        exclude-patterns: []
+      npm:
+        patterns: ['*']
+    # A major pinned on purpose goes under `ignore`, with its reason:
+    # ignore:
+    #   - dependency-name: '<package>'
+    #     update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Etc/UTC
+    cooldown:
+      default-days: __COOLDOWN__
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      github-actions:
+        patterns: ['*']

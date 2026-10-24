@@ -1,0 +1,12 @@
+{
+  "name": "playbook",
+  "owner": { "name": "playbook maintainers" },
+  "description": "A way of running projects with Claude Code: the task routine, the autopilot, boot and doctor, and the templates they write.",
+  "plugins": [
+    {
+      "name": "playbook",
+      "source": "./plugins/playbook",
+      "description": "Task routine, reviewer, autopilot, token guard, and the boot/doctor skills that set a project up from a profile."
+    }
+  ]
+}

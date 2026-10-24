@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/token-guard.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking for token exposure"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+name: Dependabot automerge
+
+# Squash-merges a Dependabot `dev-patch` PR (.github/dependabot.yml) once CI is
+# green on its current head. Without required checks on GitHub, its own
+# auto-merge would not wait for CI; this workflow is the wait.
+#
+# It runs from main's copy of this file with a write token, so it never checks
+# out or runs anything from the PR: it reads event metadata and calls `gh`.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  automerge:
+    # `conclusion` covers both CI jobs (`ci` and `audit`). The head repository
+    # check keeps a fork's PR out even if it names its branch like Dependabot's.
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/npm_and_yarn/dev-patch-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Merge the PR whose head is the commit CI passed on
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          # Base main and the group named in the title, not only the branch
+          # prefix: an ungrouped PR for a package called `dev-patch-…` would
+          # match the prefix too.
+          pr=$(gh pr list --state open --base main --head "$BRANCH" --author app/dependabot \
+            --json number,title \
+            --jq '[.[] | select(.title | contains("the dev-patch group"))][0].number // empty')
+          if [ -z "$pr" ]; then
+            echo "No open dev-patch PR from Dependabot for $BRANCH; nothing to merge."
+            exit 0
+          fi
+          # Every commit must be Dependabot's: a person pushing to the branch
+          # takes the PR out of the unattended path. REST, not `gh pr view`:
+          # GraphQL gives a bot author no login. `--paginate` prints one line
+          # per foreign commit across every page, so count lines.
+          others=$(gh api --paginate "repos/$GH_REPO/pulls/$pr/commits" \
+            --jq '.[] | select(.author.login != "dependabot[bot]") | .sha' | wc -l)
+          if [ "$others" -ne 0 ]; then
+            echo "PR #$pr has commits from someone other than Dependabot; leaving it for review."
+            exit 0
+          fi
+          # --match-head-commit refuses the merge if the branch moved after the
+          # green run, so a newer, untested head is never merged. --subject keeps
+          # the squash commit within the 72-character rule.
+          gh pr merge "$pr" --squash --match-head-commit "$HEAD_SHA" \
+            --subject "chore(deps-dev): dev-patch updates (#$pr)"

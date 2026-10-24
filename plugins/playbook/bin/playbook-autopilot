@@ -1,0 +1,19 @@
+#!/bin/sh
+# playbook-autopilot <command>: the autopilot CLI (autopilot/src/cli.ts),
+# on PATH while the plugin is enabled. TypeScript run directly by Node's
+# type stripping, so no install and no build: Node 22.18+ is needed on the
+# machine whatever the project's own stack is.
+set -eu
+here=$(cd "$(dirname "$0")" && pwd)
+cli="$here/../autopilot/src/cli.ts"
+
+major=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
+minor=$(node -p 'process.versions.node.split(".")[1]' 2>/dev/null || echo 0)
+if [ "$major" -lt 22 ] || { [ "$major" -eq 22 ] && [ "$minor" -lt 18 ]; }; then
+	echo "playbook-autopilot: needs Node 22.18 or later on PATH (found $(node -v 2>/dev/null || echo none))." >&2
+	exit 2
+fi
+if [ "$major" -eq 23 ] && [ "$minor" -lt 6 ]; then
+	exec node --experimental-strip-types --no-warnings "$cli" "$@"
+fi
+exec node --no-warnings "$cli" "$@"

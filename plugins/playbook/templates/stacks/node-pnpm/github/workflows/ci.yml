@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Superseded PR runs are pointless; a push to main is the merge itself, so it
+# always runs to completion.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
+  # Add any tool's telemetry opt-out here: opting out on a laptop doesn't
+  # cover runners or cloud sessions.
+
+# First-party actions only: every third-party action is supply-chain surface
+# a small workflow doesn't need. Dependabot keeps their versions current.
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      # pnpm comes from the `packageManager` field, same as on a laptop.
+      - name: Enable corepack
+        run: corepack enable pnpm
+
+      - name: Resolve pnpm store path
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
+
+      # The profile's gate, in the same order as /ship runs it.
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Enable corepack
+        run: corepack enable pnpm
+
+      # Reads pnpm-lock.yaml directly, so no install. Separate from `ci` so a
+      # fresh advisory or a registry hiccup reads differently from a code
+      # failure. Fails on high and critical only; `--ignore <GHSA>` and
+      # `--ignore-unfixable` are the escape hatches when no fix exists.
+      - run: pnpm audit --prod --audit-level high

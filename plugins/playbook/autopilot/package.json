@@ -1,0 +1,7 @@
+{
+  "name": "playbook-autopilot",
+  "private": true,
+  "type": "module",
+  "description": "No dependencies: run with Node 22.18+ (type stripping). Tests: node --test \"src/*.test.ts\"",
+  "scripts": { "test": "node --test \"src/*.test.ts\"" }
+}

@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# Claude Code per-user settings
+.claude/settings.local.json
+
+# Node, in case anyone runs npm in autopilot/
+node_modules/

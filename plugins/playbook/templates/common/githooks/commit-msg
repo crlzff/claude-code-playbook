@@ -1,0 +1,9 @@
+#!/bin/sh
+# Keep only the subject line: drops multi-line bodies and trailers such as
+# Co-Authored-By or "Generated with Claude Code". Squash merges made on
+# GitHub skip this hook: set the repository's squash default to the PR title
+# (repo-setup.md).
+msg_file="$1"
+subject=$(grep -v '^#' "$msg_file" | sed '/^[[:space:]]*$/d' | head -n 1)
+[ -z "$subject" ] && exit 0
+printf '%s\n' "$subject" > "$msg_file"

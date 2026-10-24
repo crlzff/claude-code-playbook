@@ -1,0 +1,63 @@
+{
+  "pack": "node-pnpm",
+  "description": "Node (version from .nvmrc) with pnpm from corepack; GitHub Actions CI; Dependabot for npm and actions.",
+  "profile": {
+    "stack": {
+      "setup": "corepack pnpm install --frozen-lockfile --prefer-offline",
+      "notes": "pnpm comes from corepack at the version in package.json packageManager; Node from .nvmrc. If pnpm or the right node is missing from PATH in Claude's shell, prefix the version manager's bin dir."
+    },
+    "verify": {
+      "test": "corepack pnpm test",
+      "lint": "corepack pnpm lint",
+      "typecheck": "corepack pnpm typecheck",
+      "build": "corepack pnpm build"
+    },
+    "deps": {
+      "audit": "pnpm audit --prod --audit-level high"
+    },
+    "autopilot": {
+      "testFile": "\\.(test|spec)\\.[cm]?[jt]sx?$",
+      "testCall": "\\b(it|test)\\(",
+      "tripwires": [
+        {
+          "rule": "dependency",
+          "file": "(^|/)package\\.json$",
+          "added": "^\\s*\"(?!version\")[@\\w./-]+\":\\s*\"(catalog:|workspace:|npm:|[\\^~]?\\d)"
+        },
+        {
+          "rule": "guard",
+          "file": "(^|/)(eslint(\\.[\\w-]+)?\\.config\\.[cm]?[jt]s|\\.eslintrc(\\.\\w+)?)$"
+        },
+        {
+          "rule": "scripts",
+          "file": "(^|/)package\\.json$",
+          "line": "^\\s*\"(prepare|preinstall|postinstall|prepublishOnly|pretest|posttest|prebuild|postbuild|(test|lint|typecheck|build|dev|start)(:[\\w:-]+)?)\"\\s*:"
+        }
+      ]
+    }
+  },
+  "packageJson": {
+    "scripts": {
+      "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
+      "audit:prod": "pnpm audit --prod --audit-level high"
+    },
+    "packageManager": "from `corepack use pnpm@latest` at boot",
+    "engines": {
+      "node": "the major in .nvmrc"
+    }
+  },
+  "gitignore": [
+    "node_modules/",
+    "dist/",
+    "coverage/",
+    "*.tsbuildinfo"
+  ],
+  "files": {
+    "github/workflows/ci.yml": ".github/workflows/ci.yml",
+    "github/dependabot.yml": ".github/dependabot.yml",
+    "github/workflows/dependabot-automerge.yml": ".github/workflows/dependabot-automerge.yml (only when deps.automerge is not none)"
+  },
+  "rules": [
+    "Package manager is pnpm via corepack (version in package.json `packageManager`), never npm or yarn."
+  ]
+}

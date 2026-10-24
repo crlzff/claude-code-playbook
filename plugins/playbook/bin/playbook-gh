@@ -1,0 +1,45 @@
+#!/bin/sh
+# playbook-gh <gh args…>: run `gh` once with this repository's PAT, borrowed
+# from the OS credential store (through git's credential helper: the macOS
+# keychain, libsecret, Windows Credential Manager…) for that one command. `gh` itself stays logged out:
+# a fine-grained PAT scoped to one repository bounds what a leak can reach,
+# where `gh auth login` would hold an account-wide token.
+#
+# The credential is looked up with the repository path, so each project can
+# keep its own PAT: that needs `git config credential.useHttpPath true` in
+# the repository (boot sets it; templates/common/repo-setup.md).
+#
+# The token never reaches a file, an echo, or a debug stream: debug output
+# would print the Authorization header into the session transcript.
+set -eu
+
+for arg in "$@"; do
+	case "$arg" in
+	--verbose | --debug | -v)
+		echo "playbook-gh: refusing '$arg': it can print the Authorization header" >&2
+		exit 2
+		;;
+	esac
+done
+unset GH_DEBUG DEBUG GIT_TRACE GIT_CURL_VERBOSE 2>/dev/null || true
+
+url=$(git remote get-url origin 2>/dev/null) || {
+	echo "playbook-gh: this repository has no 'origin' remote" >&2
+	exit 2
+}
+repo=$(printf '%s' "$url" | sed -E \
+	-e 's#^https://([^@/]+@)?github\.com/##' \
+	-e 's#^ssh://git@github\.com/##' \
+	-e 's#^git@github\.com:##' \
+	-e 's#\.git$##')
+
+token=$(printf 'protocol=https\nhost=github.com\npath=%s.git\n\n' "$repo" |
+	GIT_TERMINAL_PROMPT=0 git credential fill | sed -n 's/^password=//p') || true
+if [ -z "$token" ]; then
+	echo "playbook-gh: no credential for github.com/$repo in the credential store." >&2
+	echo "  Locked store? Unlock it (macOS, error -128: security unlock-keychain), then retry." >&2
+	echo "  Never stored? See the playbook's repo-setup.md, step 'PAT'." >&2
+	exit 2
+fi
+
+GH_TOKEN=$token GH_PROMPT_DISABLED=1 exec gh "$@"
