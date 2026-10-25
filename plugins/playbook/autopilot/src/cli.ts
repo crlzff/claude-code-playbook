@@ -32,7 +32,9 @@ import {
   parsePlan,
   parseRoadmap,
   pickNext,
+  resumeFor,
   scanDiff,
+  sessionOf,
   startFor,
   taskKind,
   unknownDeps,
@@ -593,29 +595,55 @@ function runOne(c: Claim, plan: Plan, wt: string, verify: boolean): { status: St
   }
   try {
     prepare(c, wt)
-    const hours = ap.workerTimeoutHours ?? 4
-    const worker = spawnSync(
-      'claude',
-      [
-        '-p', `/playbook:autopilot-next ${c.id}`,
-        '--output-format', 'json',
-        '--permission-mode', process.env.AUTOPILOT_PERMISSION_MODE ?? ap.permissionMode ?? 'auto',
-        '--name', `autopilot ${c.id}`,
-      ],
-      { cwd: wt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: hours * 60 * 60 * 1000 },
-    )
-    const output = `${worker.stdout ?? ''}${worker.stderr ?? ''}`
-    writeFileSync(join(logs(), `${safe(c.id)}-${c.at.replace(/[:.]/g, '-')}.json`), output)
-
-    if (worker.error || worker.status === null) {
-      const why = worker.error?.message ?? `killed (${worker.signal ?? 'timeout'})`
-      end('failed', undefined, `worker did not run to the end: ${why}`)
-      return { status: 'failed', ending: 'stop' }
+    // One time limit for the worker and its resume together.
+    const deadline = Date.now() + (ap.workerTimeoutHours ?? 4) * 60 * 60 * 1000
+    const log = join(logs(), `${safe(c.id)}-${c.at.replace(/[:.]/g, '-')}`)
+    const work = (args: string[], suffix: string) => {
+      const worker = spawnSync(
+        'claude',
+        [
+          ...args,
+          '--output-format', 'json',
+          '--permission-mode', process.env.AUTOPILOT_PERMISSION_MODE ?? ap.permissionMode ?? 'auto',
+          '--name', `autopilot ${c.id}`,
+        ],
+        { cwd: wt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: Math.max(deadline - Date.now(), 1) },
+      )
+      const output = `${worker.stdout ?? ''}${worker.stderr ?? ''}`
+      writeFileSync(`${log}${suffix}.json`, output)
+      return { worker, output }
     }
-    if (worker.status !== 0 && LIMIT.test(output)) {
-      end('failed', undefined, 'usage limit')
-      out('limit', c.id, 'usage limit reached: once it resets, finish its branch with /ship, or delete it and requeue')
-      return { status: 'failed', ending: 'stop' }
+
+    let { worker, output } = work(['-p', `/playbook:autopilot-next ${c.id}`], '')
+    for (let resumes = 0; ; resumes++) {
+      if (worker.error || worker.status === null) {
+        const why = worker.error?.message ?? `killed (${worker.signal ?? 'timeout'})`
+        end('failed', undefined, `worker did not run to the end: ${why}`)
+        return { status: 'failed', ending: 'stop' }
+      }
+      if (worker.status !== 0 && LIMIT.test(output)) {
+        end('failed', undefined, 'usage limit')
+        out('limit', c.id, 'usage limit reached: once it resets, finish its branch with /ship, or delete it and requeue')
+        return { status: 'failed', ending: 'stop' }
+      }
+      const next = resumeFor({
+        exit: worker.status,
+        commits: Number(tryGit(['rev-list', '--count', `${baseRef(c.base)}..HEAD`], wt) ?? '0'),
+        reported: assessEvents(readEvents(), c.id, c.at),
+        session: sessionOf(worker.stdout ?? ''),
+        resumes,
+      })
+      if (next.kind === 'check' || Date.now() >= deadline) break
+      recordEvent(c.id, 'info', 'worker ended before its PR: resuming it once')
+      ;({ worker, output } = work(
+        [
+          '-p',
+          'You ended your turn before this task was done. Carry on from where you stopped: finish `ship` ' +
+            `and report the PR with \`playbook-autopilot event ${c.id} pr <url>\`, or stop BLOCKED.`,
+          '--resume', next.session,
+        ],
+        '-resume',
+      ))
     }
 
     const result = check(c, plan, wt, verify)

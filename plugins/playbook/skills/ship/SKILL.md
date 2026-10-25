@@ -13,14 +13,16 @@ Ship the current branch. Read `.claude/profile.json` first ("profile").
      `landmines-security`, `docs`. Merge their findings, dropping
      duplicates. A finding two lenses both raise counts as agreed.
    - If the diff touches a security task or a `security.sensitive` path:
-     also run `/security-review` and treat its findings as blocking.
+     also run `/security-review` and treat its findings as blocking. Its
+     report is input, not the end of `ship`.
 
    Fix every blocking finding, and every non-blocking one that two lenses
    agree on or that costs a few lines.
    Skip a finding, whatever the rule, if fixing it would leave the task's
    scope, contradict CLAUDE.md or the task, or need a decision that is mine
    (design, a dependency, CI); list those with the reason. Commit fixes with
-   one-line messages, then review again until nothing blocking is left.
+   one-line messages, then review again (a new reviewer run, not a message
+   to the last one; wait for its verdict) until nothing blocking is left.
    Stop and ask after three rounds, or as soon as one of your
    fixes causes a regression for the third time: the mechanism is wrong,
    say so instead of patching again. Show what you fixed and skipped.

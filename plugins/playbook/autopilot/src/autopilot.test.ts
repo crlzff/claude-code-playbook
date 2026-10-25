@@ -10,7 +10,9 @@ import {
   parsePlan,
   parseRoadmap,
   pickNext,
+  resumeFor,
   scanDiff,
+  sessionOf,
   startFor,
   taskKind,
   unknownDeps,
@@ -617,5 +619,49 @@ describe('startFor', () => {
 
   it('refuses a pushed branch: finish it by hand, or delete it to start over', () => {
     like(startFor({ left: true }), { kind: 'refuse', reason: /\/ship[\s\S]*delete/ })
+  })
+})
+
+describe('sessionOf', () => {
+  const id = '0f8fad5b-d9cb-469f-a165-70867728950e'
+
+  it('reads the session of the JSON result', () => {
+    assert.equal(sessionOf(JSON.stringify({ type: 'result', session_id: id, result: 'done' })), id)
+  })
+
+  it('reads it from a list of messages too: the last one that has it', () => {
+    const lines = [{ type: 'system', session_id: id }, { type: 'assistant' }, { type: 'result', session_id: id }]
+    assert.equal(sessionOf(JSON.stringify(lines)), id)
+  })
+
+  it('finds nothing in output that is not JSON, or has no session', () => {
+    assert.equal(sessionOf('Error: something went wrong'), undefined)
+    assert.equal(sessionOf(JSON.stringify({ type: 'result' })), undefined)
+    assert.equal(sessionOf(JSON.stringify({ session_id: '--help' })), undefined)
+  })
+})
+
+describe('resumeFor', () => {
+  const session = '0f8fad5b-d9cb-469f-a165-70867728950e'
+  const stopped = { exit: 0, commits: 3, reported: { critical: false, blocked: false }, session, resumes: 0 }
+
+  it('resumes a worker that ended its turn with work on the branch and no PR', () => {
+    assert.deepEqual(resumeFor(stopped), { kind: 'resume', session })
+  })
+
+  it('resumes once: a worker that stops again is checked as it stands', () => {
+    assert.deepEqual(resumeFor({ ...stopped, resumes: 1 }), { kind: 'check' })
+  })
+
+  it('checks instead when the worker finished, blocked, failed or never started', () => {
+    for (const ended of [
+      { ...stopped, reported: { critical: false, blocked: false, pr: 'https://example.test/pull/1' } },
+      { ...stopped, reported: { critical: false, blocked: true } },
+      { ...stopped, exit: 1 },
+      { ...stopped, commits: 0 },
+      { ...stopped, session: undefined },
+    ]) {
+      assert.deepEqual(resumeFor(ended), { kind: 'check' })
+    }
   })
 })

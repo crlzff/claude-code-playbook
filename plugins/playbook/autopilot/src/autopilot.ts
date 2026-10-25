@@ -594,3 +594,44 @@ export function startFor(branch: { left: boolean }): Start {
       '(locally and on origin) and close its PR to start over',
   }
 }
+
+const SESSION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** The session of a `claude -p --output-format json` run: one result object, or a list of messages. */
+export function sessionOf(stdout: string): string | undefined {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(stdout)
+  } catch {
+    return undefined
+  }
+  const messages = (Array.isArray(parsed) ? parsed : [parsed]) as { session_id?: unknown }[]
+  const id = messages.map(m => m?.session_id).filter(s => typeof s === 'string').at(-1)
+  return typeof id === 'string' && SESSION.test(id) ? id : undefined
+}
+
+export interface WorkerEnd {
+  /** The worker's exit code. */
+  exit: number
+  /** Commits on the task branch above its base. */
+  commits: number
+  /** What the attempt reported so far. */
+  reported: Assessment
+  /** The session to resume, from the worker's output. */
+  session?: string
+  /** Resumes the attempt has had. */
+  resumes: number
+}
+
+export type Resume = { kind: 'resume'; session: string } | { kind: 'check' }
+
+/**
+ * A headless worker ends when its turn does, so a turn that ends early (a
+ * skill whose report reads as the final answer) leaves work on the branch and
+ * no PR. Resume it once; a worker that reported its PR, or stops again, is
+ * checked as it stands.
+ */
+export function resumeFor(w: WorkerEnd): Resume {
+  const early = w.exit === 0 && w.commits > 0 && !w.reported.blocked && !w.reported.pr
+  return early && w.session && w.resumes < 1 ? { kind: 'resume', session: w.session } : { kind: 'check' }
+}

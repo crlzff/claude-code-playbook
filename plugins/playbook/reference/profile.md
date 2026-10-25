@@ -35,7 +35,7 @@ from SPEC → Security.
 | `deps.cooldownDays` | Days a release waits before Dependabot proposes it (`3`) |
 | `autopilot.mode` | *Experimental.* `off` (default) · `plan-only` (`/autopilot-plan` drafts plans you run with `/task`) · `local-queue` (the full loop) |
 | `autopilot.caps` | `perDay` 4, `unmerged` 3, `security` 1; env `AUTOPILOT_MAX_PER_DAY`, `_UNMERGED`, `_SECURITY` override |
-| `autopilot.permissionMode`, `workerTimeoutHours` | Worker sessions' mode (`auto`, env `AUTOPILOT_PERMISSION_MODE`) and time limit (`4`) |
+| `autopilot.permissionMode`, `workerTimeoutHours` | Worker sessions' mode (`auto`, env `AUTOPILOT_PERMISSION_MODE`) and time limit in hours, one resume included (`4`) |
 | `autopilot.keepAwake` | Prefix that keeps the machine awake during a run (macOS: `caffeinate -i`), or empty |
 | `autopilot.copyIntoWorktree` | Gitignored files the worker tree needs (`.env.local`) |
 | `autopilot.notify` | `push` (critical, blocked and failed events as push notifications) · `none` |
