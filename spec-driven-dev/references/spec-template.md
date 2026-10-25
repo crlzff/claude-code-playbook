@@ -200,7 +200,8 @@ your security approach so agents don't introduce vulnerabilities.]
 - Input validation: [strategy for untrusted input — sanitization, CSP]
 - Sensitive areas: [each area and where it lives, planned paths included:
   "auth — `src/auth/`", "account deletion — `src/jobs/delete-account.ts`".
-  These get interactive work, line-by-line review and a security review.]
+  These get interactive work (or the autopilot's security gates),
+  line-by-line review and a security review.]
 - Secrets management: [how secrets are stored and accessed — env vars,
-  vault, etc. Never committed to repo.]
+  vault, etc. Never committed to repo, never in a cloud environment.]
 ```

@@ -48,6 +48,8 @@ export interface Claim {
   at: string
   security: boolean
   migration: boolean
+  /** The run holding it (`runnerOf`); absent on claims older than the field. */
+  where?: string
 }
 
 export type Status = 'ok' | 'critical' | 'blocked' | 'failed'
@@ -577,6 +579,24 @@ export function assessEvents(events: LoggedEvent[], id: string, since: string): 
     blocked: attempt.some(e => e.level === 'blocked'),
     pr: attempt.filter(e => e.level === 'pr').at(-1)?.text,
   }
+}
+
+type Env = Record<string, string | undefined>
+
+/** A Claude Code cloud session sets `CLAUDE_CODE_REMOTE=true`; it is never set locally. */
+export function isCloud(env: Env): boolean {
+  return env.CLAUDE_CODE_REMOTE === 'true'
+}
+
+/**
+ * Where a run holds its claim, for `status` once the run is gone: a cloud
+ * session's link (its VM can be reclaimed mid-run), or `local`. Never the
+ * machine's name: the state branch is pushed.
+ */
+export function runnerOf(env: Env): string {
+  if (!isCloud(env)) return 'local'
+  const session = env.CLAUDE_CODE_REMOTE_SESSION_ID
+  return session ? `https://claude.ai/code/${session.replace(/^cse_/, 'session_')}` : 'a cloud session'
 }
 
 export type Start = { kind: 'fresh' } | { kind: 'refuse'; reason: string }

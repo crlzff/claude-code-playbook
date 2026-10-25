@@ -50,6 +50,8 @@ this machine into the project: projects may be public.
      stays `undecided`, `verify` empty.
    - `.claude/settings.json` from `claude/settings.json`. Merge into an
      existing file; never drop keys that are there.
+   - `.claude/hooks/playbook-cloud.sh` from `claude/hooks/`, executable:
+     the SessionStart hook that fetches the playbook in a cloud session.
    - `.claude/commands/*.md` from `claude/commands/` (the wrappers), except
      the autopilot ones when `autopilot.mode` is `off` (keep
      `autopilot-plan` for `plan-only`).

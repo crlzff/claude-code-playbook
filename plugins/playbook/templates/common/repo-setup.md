@@ -46,3 +46,17 @@ Never paste a token into a Claude session.
    query your credential helper by hand to see which entry answers.
 6. **Hooks**: `git config --get core.hooksPath` prints `.githooks` (boot sets
    it; a stack pack also sets it from its install step for fresh clones).
+7. **Cloud autopilot** (optional, only to run `/autopilot-run` in a Claude
+   Code cloud session). A cloud session doesn't install the project's
+   plugins, so the hook boot writes (`.claude/hooks/playbook-cloud.sh`)
+   fetches the playbook. In the cloud environment's settings on claude.ai:
+   - one environment variable, `PLAYBOOK_SOURCE=<owner>/<repo>` of the
+     playbook you installed (`@<branch or tag>` pins a version);
+   - nothing else: no PAT, no other token, no real secret. The session's
+     GitHub proxy pushes and opens PRs with the credential it holds outside
+     the VM; that credential reaches every repository your GitHub
+     connection can, so restrict the connection on GitHub's side if that is
+     more than this one.
+
+   Only REST calls go through the proxy: merging (`/merge-stack`, `/done`)
+   stays on your machine.

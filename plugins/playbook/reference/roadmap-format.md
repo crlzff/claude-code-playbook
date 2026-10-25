@@ -64,7 +64,9 @@ copies ever drift, the parser wins.
 - **Local**: an interactive session; you watch and steer.
 - **Cloud**: a command settles it, so it may run unattended (the autopilot)
   or beside other work. A Claude Code cloud session doesn't load the
-  playbook plugin: there it runs on CLAUDE.md alone, without the routine.
+  playbook plugin: there it runs on CLAUDE.md alone, without the routine,
+  except `/autopilot-run`, which fetches the playbook (repo-setup.md,
+  step 7).
 - **Design**: done in Claude Design; a later Local task lands the handoff.
 
 The words in parentheses are read by the autopilot, so use these phrases
@@ -72,7 +74,7 @@ when they apply:
 
 | Phrase | Effect |
 |---|---|
-| `security-sensitive: <what>`, `deletes data`, `touches deletion`, `touches identity` | Security task: Local, never beside another task, line-by-line review, `/security-review`; the autopilot takes it only under its security gates |
+| `security-sensitive: <what>`, `deletes data`, `touches deletion`, `touches identity` | Security task: Local, never beside another task, line-by-line review, `/security-review`; the autopilot takes it only under its security gates, the same locally and in the cloud |
 | `visual`, `real device`, `hands-on`, `your decision`, `your judgement`, `secrets`, `go-live` | Yours: settled by eye, by hand or by you. Never delegated |
 
 ## Markers (after the size)

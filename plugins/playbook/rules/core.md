@@ -11,7 +11,8 @@
 - Never add business information (prices, partner names, contracts). No PII (email, full IP) in events, logs or error reports.
 - Other products are studied, never copied: nothing of theirs (code, assets, text, names, exact styles or values) goes into the repo or a design; keep the pattern, in our own words. Never use their unreleased content or an idea known only from their source code that isn't common practice, and never get past a login, paywall or access control. Research stays at what a normal visitor's browser receives (pages, headers, the shipped JS); ask before going further (sourcemaps, API calls, guessed paths, posing as another client).
 - Committed files never name the products we study: refer to them as Source A, B…; the key stays local in `research/sources.md` (`research/` is gitignored except `notes.md`; never `git add -f` there). Grep before every commit.
-- Security-sensitive tasks (SPEC → Security → Sensitive areas) are done interactively, never in cloud sessions.
+- Security-sensitive tasks (SPEC → Security → Sensitive areas) are done interactively, or by the autopilot under its security gates, locally or in the cloud; never in any other unattended session.
+- Cloud environments hold no real secrets: none in their environment variables, network secrets or setup scripts. GitHub goes through the session's own proxy.
 - Ask before adding dependencies or changing CI. No global installs: tools live in the project.
 
 ## Workflow

@@ -6,5 +6,18 @@
   "remoteControlAtStartup": false,
   "enabledPlugins": {
     "playbook@playbook": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/playbook-cloud.sh\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
   }
 }

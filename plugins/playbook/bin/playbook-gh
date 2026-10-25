@@ -27,6 +27,17 @@ url=$(git remote get-url origin 2>/dev/null) || {
 	echo "playbook-gh: this repository has no 'origin' remote" >&2
 	exit 2
 }
+
+# A Claude Code cloud session has no credential store: its GitHub proxy
+# keeps the credential outside the VM and attaches it to each request (GH_TOKEN
+# reads `proxy-injected`). origin may point at that proxy, so name the
+# repository from the URL's last two segments. The proxy refuses GraphQL:
+# only REST calls (`api`, `run list`) work there, never `pr merge` or `pr edit`.
+if [ "${CLAUDE_CODE_REMOTE:-}" = true ]; then
+	GH_REPO=${GH_REPO:-$(printf '%s' "$url" | sed -E -e 's#\.git$##' -e 's#.*[/:]([^/:]+/[^/]+)$#\1#')}
+	export GH_REPO
+	GH_PROMPT_DISABLED=1 exec gh "$@"
+fi
 repo=$(printf '%s' "$url" | sed -E \
 	-e 's#^https://([^@/]+@)?github\.com/##' \
 	-e 's#^ssh://git@github\.com/##' \

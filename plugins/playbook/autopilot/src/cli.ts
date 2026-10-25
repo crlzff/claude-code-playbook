@@ -29,10 +29,12 @@ import {
   branchName,
   candidates,
   configFrom,
+  isCloud,
   parsePlan,
   parseRoadmap,
   pickNext,
   resumeFor,
+  runnerOf,
   scanDiff,
   sessionOf,
   startFor,
@@ -110,6 +112,8 @@ const STATE_BRANCH = ap.stateBranch || 'autopilot-state'
 const REMOTE_STATE = `origin/${STATE_BRANCH}`
 const ROADMAP = profile.docs?.roadmap || 'ROADMAP.md'
 const LOG = profile.docs?.log || 'docs/log.md'
+// A cloud session doesn't install the project's plugins: workers load this one from where it sits.
+const PLUGIN_ROOT = resolve(import.meta.dirname, '..', '..')
 
 function positive(name: string, fromProfile: number | undefined, fallback: number): number {
   const value = Number(process.env[name] ?? fromProfile ?? fallback)
@@ -330,6 +334,7 @@ function status(): void {
   const roadmap = mainRoadmap()
   const merged = (id: string) => roadmap.get(id)?.done === true
   console.log(`Mode: ${ap.mode ?? 'off'}`)
+  console.log(`Route: ${isCloud(process.env) ? 'cloud' : 'local'}`)
   console.log(`STOP: ${state.stop ? 'set' : 'not set'}`)
   console.log('\nQueue:')
   for (const q of [...state.queue].sort((a, b) => a.order - b.order)) {
@@ -337,7 +342,9 @@ function status(): void {
     console.log(`  ${q.order}. ${q.plan.id}${sec}${merged(q.plan.id) ? ' merged' : ''}`)
   }
   console.log('\nIn progress:')
-  for (const c of state.claims) console.log(`  ${c.id} on ${c.branch} (base ${c.base}) since ${c.at}`)
+  for (const c of state.claims) {
+    console.log(`  ${c.id} on ${c.branch} (base ${c.base}) since ${c.at}${c.where ? `, run from ${c.where}` : ''}`)
+  }
   console.log('\nFinished:')
   for (const o of state.outcomes) {
     console.log(`  ${o.id} ${merged(o.id) ? 'merged' : o.status} ${o.branch} (base ${o.base}) ${o.pr ?? ''}`.trimEnd())
@@ -606,6 +613,7 @@ function runOne(c: Claim, plan: Plan, wt: string, verify: boolean): { status: St
           '--output-format', 'json',
           '--permission-mode', process.env.AUTOPILOT_PERMISSION_MODE ?? ap.permissionMode ?? 'auto',
           '--name', `autopilot ${c.id}`,
+          ...(isCloud(process.env) ? ['--plugin-dir', PLUGIN_ROOT] : []),
         ],
         { cwd: wt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: Math.max(deadline - Date.now(), 1) },
       )
@@ -698,6 +706,7 @@ function run(max: number, verify: boolean): void {
     // The claim comes first: it is the lock, and nothing touches the worker tree without it.
     const c: Claim = {
       id: plan.id, branch, base, at: new Date().toISOString(), security: plan.security, migration: plan.migration,
+      where: runnerOf(process.env),
     }
     claim(c)
 

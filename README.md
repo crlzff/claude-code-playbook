@@ -75,15 +75,9 @@ lives in the projects that boot the playbook.
   session and every machine follows them.
 - **Other products are studied, never copied**, and never named in
   committed files.
-- **An autopilot, experimental and opt-in.** It runs approved ROADMAP tasks
-  while you're away: one fresh Claude Code session per task, in its own
-  worktree, following the same routine. You approve every plan first;
-  tasks that need your eye, a device or a decision are never offered.
-  It reports its judgment calls as it makes them, and its own checks flag
-  any change to a guard (security files, tests, hooks, CI, dependencies).
-  It stops on a daily cap, a blocked task or two failures, and it never
-  merges: `/merge-stack` shows each PR's calls first and asks for every one.
-  Off by default; not to be relied on until it has proven itself.
+- **An autopilot, experimental and off by default.** It runs the ROADMAP
+  tasks whose plans you approved while you're away, locally or in a cloud
+  session, and opens their PRs.
 
 ## Credits
 

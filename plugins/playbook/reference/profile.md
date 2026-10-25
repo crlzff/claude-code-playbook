@@ -27,7 +27,7 @@ from SPEC → Security.
 | `tdd.mode` | `strict-stub` (failing test plus a stub committed alone, red output in the PR) · `required` (tests with every feature, order free) · `off` |
 | `tdd.exempt` | Task markers that skip the red step (`scaffold`, `spike`, `fixture`) |
 | `review.lenses` | `3`: three reviewers in parallel (scope and tests · landmines and security · docs) · `1`: one reviewer for everything |
-| `security.sensitive` | `[{ "area": "auth", "paths": ["src/auth/"] }]`, from SPEC → Security. Interactive only, line-by-line review, `/security-review` |
+| `security.sensitive` | `[{ "area": "auth", "paths": ["src/auth/"] }]`, from SPEC → Security. Interactive, or the autopilot under its security gates (locally or in the cloud); line-by-line review, `/security-review` |
 | `security.landmines` | Short names of the project's security rules; the reviewer checks each |
 | `git.merge` | `agent-confirm` (the agent merges after showing CI and asking) · `human` (you merge on GitHub) |
 | `git.protection` | `pre-push` (local hook, for a free private repository) · `ruleset` (server-side, for a public one) |
@@ -36,7 +36,7 @@ from SPEC → Security.
 | `autopilot.mode` | *Experimental.* `off` (default) · `plan-only` (`/autopilot-plan` drafts plans you run with `/task`) · `local-queue` (the full loop) |
 | `autopilot.caps` | `perDay` 4, `unmerged` 3, `security` 1; env `AUTOPILOT_MAX_PER_DAY`, `_UNMERGED`, `_SECURITY` override |
 | `autopilot.permissionMode`, `workerTimeoutHours` | Worker sessions' mode (`auto`, env `AUTOPILOT_PERMISSION_MODE`) and time limit in hours, one resume included (`4`) |
-| `autopilot.keepAwake` | Prefix that keeps the machine awake during a run (macOS: `caffeinate -i`), or empty |
+| `autopilot.keepAwake` | Prefix that keeps the machine awake during a run (macOS: `caffeinate -i`), or empty; not used in a cloud session |
 | `autopilot.copyIntoWorktree` | Gitignored files the worker tree needs (`.env.local`) |
 | `autopilot.notify` | `push` (critical, blocked and failed events as push notifications) · `none` |
 | `autopilot.patterns` | ROADMAP parser overrides: `taskId`, `yours`, `yoursMarks`, `security`, `choreMarks`, `docsMarks` (regex sources; defaults in `reference/roadmap-format.md`) |

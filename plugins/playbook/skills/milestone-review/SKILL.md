@@ -26,7 +26,7 @@ Milestone $ARGUMENTS is finished. Read `.claude/profile.json` first
    the autopilot ran) its critical calls in that range
    (`playbook-autopilot events | grep ' critical '`). Record the findings;
    don't fix them on this branch. The log entry lists each one, and each
-   becomes its own task after this PR ships (security ones interactive).
+   becomes its own task after this PR ships (security ones as security tasks).
 4. **Branches.** List local branches other than `main`, and remote
    branches without an open PR; propose which to delete, delete them after
    I confirm. Never the autopilot's state branch.

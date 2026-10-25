@@ -7,8 +7,9 @@
 # One exception: creating the main branch on a remote that doesn't have it
 # yet (the project's first push), so a new repository can start.
 #
-# Honest about its limits: `--no-verify` bypasses it, it exists only where
-# core.hooksPath points at .githooks, and cloud sessions don't run it. It
+# Honest about its limits: `--no-verify` bypasses it, and it exists only
+# where core.hooksPath points at .githooks (a cloud session's fresh clone
+# lacks that until the stack's install step or /autopilot-run sets it). It
 # turns "push whatever you like" into "you have to mean it", nothing more.
 main=main
 zero=0000000000000000000000000000000000000000

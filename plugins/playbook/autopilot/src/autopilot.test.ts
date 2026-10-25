@@ -7,10 +7,12 @@ import {
   candidates,
   configFrom,
   DEFAULT_CONFIG,
+  isCloud,
   parsePlan,
   parseRoadmap,
   pickNext,
   resumeFor,
+  runnerOf,
   scanDiff,
   sessionOf,
   startFor,
@@ -663,5 +665,24 @@ describe('resumeFor', () => {
     ]) {
       assert.deepEqual(resumeFor(ended), { kind: 'check' })
     }
+  })
+})
+
+describe('isCloud and runnerOf', () => {
+  const cloud = { CLAUDE_CODE_REMOTE: 'true', CLAUDE_CODE_REMOTE_SESSION_ID: 'cse_01AbC' }
+
+  it('knows a cloud session only by CLAUDE_CODE_REMOTE=true', () => {
+    assert.equal(isCloud(cloud), true)
+    assert.equal(isCloud({}), false)
+    assert.equal(isCloud({ CLAUDE_CODE_REMOTE: 'false' }), false)
+  })
+
+  it('names a cloud run by its session link, so a reclaimed VM can be traced', () => {
+    assert.equal(runnerOf(cloud), 'https://claude.ai/code/session_01AbC')
+    assert.equal(runnerOf({ CLAUDE_CODE_REMOTE: 'true' }), 'a cloud session')
+  })
+
+  it('names a local run "local", never by the machine: the state branch is pushed', () => {
+    assert.equal(runnerOf({ CLAUDE_CODE_REMOTE_SESSION_ID: 'cse_01AbC' }), 'local')
   })
 })

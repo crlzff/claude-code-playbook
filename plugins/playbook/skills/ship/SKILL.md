@@ -41,17 +41,22 @@ Ship the current branch. Read `.claude/profile.json` first ("profile").
      if needed), or "scaffold/spike/fixture: no red test", or "tdd: <mode>".
      For an autopilot task, `## Judgment calls` first (see its policy). No
      attribution footer.
-6. **Open the PR yourself**, no browser:
-   `playbook-gh pr create --base <base> --title "<title>" --body "<description>"`
-   (`<base>` is `main` unless the autopilot says otherwise).
-   `playbook-gh` borrows the repo-scoped token for that one command.
+6. **Open the PR yourself**, no browser, through GitHub's REST API (a
+   cloud session's GitHub proxy refuses the GraphQL `gh pr create` uses):
+   `playbook-gh api repos/{owner}/{repo}/pulls -f head=<branch> -f base=<base> -f title="<title>" -f body="<description>" --jq .html_url`
+   prints the PR URL (`<base>` is `main` unless the autopilot says
+   otherwise). If GitHub answers 422 because the PR already exists:
+   `playbook-gh api "repos/{owner}/{repo}/pulls?head={owner}:<branch>" --jq '.[0].html_url'`.
+   `playbook-gh` borrows the repo-scoped token for that one command; in a
+   cloud session the proxy attaches its own credential instead.
    **Never** read, echo or store the token, and never add `-v`, `--debug`,
    `GH_DEBUG` or `set -x` to a command that carries it: they print the
    `Authorization` header into the transcript, which persists.
    Show me the PR URL, title and description. On a 403, the PAT lacks
-   **Pull requests: Read and write**: say so and print
+   **Pull requests: Read and write** (in a cloud session: the GitHub
+   connection can't reach the repository): say so and print
    `https://github.com/<owner>/<repo>/compare/<branch>?expand=1` instead.
-   If the credential read fails (on macOS `-128`, "could not read
+   If the credential read fails locally (on macOS `-128`, "could not read
    Username"), the credential store is locked: ask me to unlock it in my
    own terminal (macOS: `security unlock-keychain`), then retry. Don't
    retry in a loop.

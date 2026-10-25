@@ -38,13 +38,15 @@ on it, carry on.
   round and wait for its verdict. Never message the earlier reviewer:
   SendMessage resumes it in the background, and its verdict may not come
   back before you move on.
-- Step 6: create the PR with `--base <base>`, the base
+- Step 6: create the PR with `base=<base>`, the base
   `playbook-autopilot status` shows for this task (the main branch unless
   it is stacked). The description starts with `## Judgment calls`: critical
   ones first, then minor, or "none".
 - Once the PR exists: `playbook-autopilot event <id> pr <url>`.
 - If the credential read fails (the credential store is locked), stop
-  BLOCKED with "credential store locked": don't retry.
+  BLOCKED with "credential store locked": don't retry. A cloud run
+  (`playbook-autopilot status` says `Route: cloud`) has no credential
+  store: `playbook-gh` goes through the session's GitHub proxy.
 
 ## Judgment calls
 
@@ -71,6 +73,11 @@ report.
 - Edit `.claude/` (the profile, wrappers, settings) or the playbook: the
   autopilot doesn't change its own rules.
 - Ask a question and wait.
+- Skip a command silently because the environment lacks a service it
+  needs (a cloud run has no database server unless the project starts
+  one). Report it as a minor call ("`<command>` needs <service>, not run
+  here") and list it under `## My check` in the PR description, for me
+  before merging.
 
 ## BLOCKED
 

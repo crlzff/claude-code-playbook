@@ -24,8 +24,11 @@ remote has no main yet).
    A project command with the same name that isn't a wrapper: report it,
    never replace it.
 4. **Settings**: `.claude/settings.json` has empty `attribution`,
-   `remoteControlAtStartup: false` and `playbook@playbook` enabled, and no
-   absolute path, user name or machine detail anywhere in `.claude/`.
+   `remoteControlAtStartup: false`, `playbook@playbook` enabled and the
+   SessionStart hook of `templates/common/claude/settings.json`;
+   `.claude/hooks/playbook-cloud.sh` matches its template and is
+   executable; no absolute path, user name or machine detail anywhere in
+   `.claude/`.
 5. **Git**: `core.hooksPath` is `.githooks`; both hooks exist, are
    executable and match the templates; `origin` is GitHub;
    `credential.useHttpPath` is true in this repository.
